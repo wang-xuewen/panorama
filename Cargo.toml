@@ -1,0 +1,10 @@
+[package]
+name = "panorama"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rust_utils = { path = "../rust_utils" }
+# log4rs
+log = "0.4"
+log4rs = "1.3.0"
