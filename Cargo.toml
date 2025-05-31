@@ -5,6 +5,11 @@ edition = "2021"
 
 [dependencies]
 rust_utils = { path = "../rust_utils" }
+anyhow = "1.0"
+
 # log4rs
 log = "0.4"
 log4rs = "1.3.0"
+
+# rust
+rusqlite = "0.30"

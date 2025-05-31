@@ -1,3 +1,5 @@
+mod sqlite_sample;
+
 use log::info;
 use log4rs;
 
