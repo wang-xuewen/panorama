@@ -475,6 +475,7 @@ dependencies = [
  "anyhow",
  "log",
  "log4rs",
+ "once_cell",
  "rusqlite",
  "rust_utils",
 ]

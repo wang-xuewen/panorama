@@ -1,4 +1,4 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use log::error;
 use rusqlite::Connection;
 
@@ -7,19 +7,9 @@ pub struct SqliteCrud {
 }
 
 impl SqliteCrud {
-    /// 创建数据库连接
-    // pub fn new(db_path: &str) -> Result<Self, rusqlite::Error> {
-    //     let conn = Connection::open(db_path)?;
-    //     Ok(Self { conn: Some(conn) })
-    // }
-
     pub fn new(db_path: &str) -> Result<Self> {
         let conn = Connection::open(db_path)?;
         Ok(Self { conn: Some(conn) })
-    }
-
-    pub fn get_conn(&self) -> Result<&Connection> {
-        self.conn.as_ref().ok_or(anyhow!("Connection is None"))
     }
 }
 
