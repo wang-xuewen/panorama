@@ -1,5 +1,5 @@
 use anyhow::Result;
-use log::error;
+use log::{error, info};
 use rusqlite::Connection;
 
 pub struct SqliteCrud {
@@ -9,6 +9,7 @@ pub struct SqliteCrud {
 impl SqliteCrud {
     pub fn new(db_path: &str) -> Result<Self> {
         let conn = Connection::open(db_path)?;
+        info!("open sqlite db ok. path:{}", db_path);
         Ok(Self { conn: Some(conn) })
     }
 }
