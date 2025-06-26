@@ -7,7 +7,7 @@ pub fn use_sqlite() -> Result<()> {
 
     insert_data("aaa", "aaa_value")?;
     let result = query_data("aaa")?;
-    info!("query_data result:{}", result);
+    info!("[sqlite] query_data result:{}", result);
     Ok(())
 }
 
@@ -64,7 +64,7 @@ fn insert_data(key: &str, value: &str) -> Result<()> {
             [key, value],
         )?;
 
-    info!("插入table_test 成功。key:{} value:{}", key, value);
+    info!("[sqlite] 插入table_test 成功。key:{} value:{}", key, value);
 
     Ok(())
 }
