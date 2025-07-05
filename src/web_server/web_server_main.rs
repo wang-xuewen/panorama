@@ -1,21 +1,45 @@
 use anyhow::{Context, Result};
 use axum::{
-    extract::Path,
+    extract::{Path,Query},
     response::{Html, Json},
     routing::{get, post},
     Router,
+    http::HeaderMap,
+    Form,
 };
 use serde_json::{json, Value};
+use log::info;
+use serde::Deserialize;
 // use std::net::SocketAddr;
+use crate::use_sqlite;
+use crate::common;
+
+
+#[derive(Deserialize)]
+struct LogIn {
+    user: String
+}
+#[derive(Deserialize)]
+struct UserForm {
+    username: String,
+    password: String
+}
+#[derive(Deserialize)]
+struct UserJson {
+    username: String,
+    password: String
+}
 
 pub async fn run_server() -> Result<()> {
     let app = Router::new()
         // 首页
         .route("/", get(root))
+        .route("/login", get(log_in))   // /login?user=aaa
         // 用户相关路由
         .route("/users", get(list_users))
         .route("/users/:id", get(get_user))
         .route("/users", post(create_user))
+        .route("/users_post", post(post_user))
         // 产品相关路由
         .route("/products", get(list_products))
         .route("/products/:id", get(get_product))
@@ -40,6 +64,55 @@ pub async fn run_server() -> Result<()> {
 
 // 处理器函数
 
+async fn log_in(Query(params): Query<LogIn>,
+    headers: HeaderMap) -> Json<Value> {
+
+    info!("log in param user: {}", params.user);
+
+    //  let user_agent = headers.get("User-Agent")        // Option<&HeaderValue>
+    //     .ok_or(common::MyError::MissingValue)?      // 转为 Result<&HeaderValue, MyError>
+    //     .to_str()                                   //Result<&str, ToStrError>
+    //     .map_err(|_| common::MyError::InvalidValue)?;       // 最终 Result<&str, MyError>
+    // info!("User-Agent: {}", user_agent);
+
+    let user_agent = headers
+        .get("User-Agent")       // Option<&HeaderValue>
+        .and_then(|hv| hv.to_str().ok()) 
+        .unwrap_or("");  
+    info!("User-Agent: {}", user_agent);
+
+     let accept = headers.get("Accept").unwrap().to_str().unwrap();
+    info!("Accept: {}", accept);
+
+     match use_sqlite::query_data(&params.user) {
+        Ok(data) if !data.is_empty() => {
+            if data =="aaa_value" {
+                info!("查询ok");
+                Json(json!([
+                    {"ret": "ok"}
+                ]))
+            }else {
+               info!("非预期值: {}", data);
+                Json(json!([{"ret": "unexpected"}]))
+            }
+        }
+        Ok(_) =>{
+             info!("null");
+             Json(json!([
+                {"ret": "null."}
+            ]))
+        }
+        Err(e)=> {
+            info!("错误：{}",e);
+             Json(json!([
+                {"ret": "failed."}
+            ]))
+        }
+     }
+
+ 
+}
+
 async fn root() -> Html<&'static str> {
     Html("<h1>Welcome to the Rust Web Server!</h1>")
 }
@@ -55,8 +128,13 @@ async fn get_user(Path(id): Path<u32>) -> Json<Value> {
     Json(json!({"id": id, "name": format!("User {}", id)}))
 }
 
-async fn create_user() -> Json<Value> {
+async fn create_user(Form(form): Form<UserForm>) -> Json<Value> {
+    info!("post1 Received username: {}, password: {}", form.username, form.password);
     Json(json!({"status": "user created"}))
+}
+async fn post_user(Json(json): Json<UserJson>) -> Json<Value> {
+    info!("post2 Received username: {}, password: {}", json.username, json.password);
+    Json(json!({"status": "user post"}))
 }
 
 async fn list_products() -> Json<Value> {

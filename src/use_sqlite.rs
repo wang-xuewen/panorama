@@ -11,7 +11,7 @@ pub fn use_sqlite() -> Result<()> {
     Ok(())
 }
 
-fn create_table() -> Result<()> {
+pub fn create_table() -> Result<()> {
     let db = global::get_global_db()?;
     let mut db_obj = db.lock().unwrap_or_else(|poisoned| {
         warn!("⚠️Mutex锁中毒，强制恢复访问");
@@ -45,12 +45,26 @@ fn create_table() -> Result<()> {
 }
 
 // 写入数据
-fn insert_data(key: &str, value: &str) -> Result<()> {
+pub fn insert_data(key: &str, value: &str) -> Result<()> {
     let db = global::get_global_db()?;
     let mut db_obj = db.lock().unwrap_or_else(|poisoned| {
         warn!("⚠️Mutex锁中毒，强制恢复访问");
         poisoned.into_inner() // 从中毒状态恢复数据访问
     });
+
+    db_obj
+        .conn
+        .as_mut()
+        .ok_or_else(|| {
+            error!("取得rusqlite::Connection 可变访问出错");
+            rusqlite::Error::InvalidQuery
+        })?
+        .execute(
+            "delete from table_test where key = ?1",
+            [key],
+        )?;
+
+    info!("[sqlite] delete ok 。key:{} ", key);
 
     db_obj
         .conn
@@ -70,7 +84,7 @@ fn insert_data(key: &str, value: &str) -> Result<()> {
 }
 
 // 读取数据
-fn query_data(key: &str) -> Result<String> {
+pub fn query_data(key: &str) -> Result<String> {
     let db = global::get_global_db()?;
     let conn = db.lock().unwrap();
     let value: String = conn
