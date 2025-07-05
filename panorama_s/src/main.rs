@@ -16,7 +16,7 @@ async fn main() {
 
     // 初始化日志系统
     if let Err(e) = log4rs::init_file(
-        "/Users/zongge/rust/panorama/log4rs.yaml",
+        global::LOG4RS_YAML_PATH,
         Default::default(),
     ) {
         eprintln!("init log4rs Error: {}", e);
@@ -37,6 +37,6 @@ async fn main() {
 }
 
 fn init() -> Result<()> {
-    global::init_global_db("/Users/zongge/rust/panorama/src/sqlite_sample/sqllite_sample.db")?;
+    global::init_global_db(global::SQLITE_DB_PATH)?;
     Ok(())
 }
