@@ -5,3 +5,12 @@
 
 需要安装
 apt-get install libsqlite3-dev
+
+
+说明：
+sqlite_sample:
+  sqlite例子. use_sqlite是如何使用sqlite_sample。
+web_server:
+  web server例子。实现post get 等。
+web_socket:
+  web socket例子。
