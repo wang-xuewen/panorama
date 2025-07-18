@@ -3,6 +3,9 @@ name = "panorama_s"
 version = "0.1.0"
 edition = "2021"
 
+# 对整个 workspace 的所有成员禁用 unused 警告
+#rustc-flags = ["-A", "unused"]
+
 [dependencies]
 rust_utils = { path = "../../rust_utils" }
 anyhow = "1.0"

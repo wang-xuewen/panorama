@@ -1,3 +1,4 @@
+#![allow(unused)] // 全局屏蔽 unused 警告
 mod common;
 mod sqlite_sample;
 mod use_sqlite;
@@ -29,14 +30,21 @@ async fn main() {
         Err(e) => error!("[sqlite] use_sqlite failed: {}", e),
     }
 
-    match graceful_shutdown().await {
-        Ok(()) => println!("Shutdown successful"),
-        Err(e) => eprintln!("Shutdown failed: {}", e),
-    }
+    // 启动 Web 服务器（后台运行）
+    let server_handle = tokio::spawn(async {
+        if let Err(e) = web_server_main::run_server().await {
+            eprintln!("Server error: {}", e);
+        }
+    });
 
     // if let Err(e) = web_server_main::run_server().await {
     //     error!("Server error: {}", e);
     // }
+
+    match graceful_shutdown().await {
+        Ok(()) => println!("Shutdown successful"),
+        Err(e) => eprintln!("Shutdown failed: {}", e),
+    }
 }
 
 fn init() -> Result<()> {
