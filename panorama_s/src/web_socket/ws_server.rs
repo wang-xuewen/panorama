@@ -1,3 +1,5 @@
+use core::option::Option::None;
+
 use futures_util::{SinkExt, StreamExt, stream::SplitSink};
 use tokio::net::TcpStream;
 use tokio_tungstenite::{accept_async, WebSocketStream, tungstenite::Message};
@@ -12,22 +14,36 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
     // 拆分成读/写两端
     let (mut ws_sender, mut ws_receiver) = ws_stream.split();
 
-    // 使用 channel 控制消息积压（缓冲区大小 100）
-    let (tx, mut rx) = mpsc::channel::<Message>(100);
-
     // 任务1：读取 WebSocket 消息（含超时）
     let read_task = tokio::spawn(async move {
         loop {
             match timeout(Duration::from_millis(READ_TIMEOUT_MS), ws_receiver.next()).await {
                 Ok(Some(Ok(msg))) => {
                     match msg {
-                        Message::Close(_) => {
+                        Message::Close(close_frame) => {
                             println!("收到关闭帧，准备关闭连接");
-                            break; // 正常关闭
+                            // 显式响应关闭帧
+                            let _ = ws_sender.close().await;
+                            break; // 退出循环以释放资源
                         }
                         _ => {
                             println!("收到消息: {:?}", msg);
-                            // 可以在这里处理业务逻辑
+
+                            match msg {
+                                Message::Text(text) => {
+                                     // 回显消息
+                                    // let ret_msg = Message::Text(format!("{}_ret", text));
+                                    let ret_msg = Message::Text(text + "_ret");
+                                    if let Err(e) = ws_sender.send(ret_msg.clone()).await {
+                                        println!("Error sending message: {}", e);
+                                        break;
+                                    }
+                                    println!("已发送消息: {:?}", ret_msg);
+                                },
+                                _ => {
+                                    println!("收到消息不是Text类型，不做处理: {:?}", msg);
+                                }, 
+                            }         
                         }
                     }
                 }
@@ -44,24 +60,7 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
         }
     });
 
-    // 任务2：写入 WebSocket 消息（含超时）
-    let write_task = tokio::spawn(async move {
-        while let Some(msg) = rx.recv().await {
-            if let Err(e) = timeout(
-                Duration::from_millis(WRITE_TIMEOUT_MS),
-                ws_sender.send(msg)
-            ).await {
-                eprintln!("发送超时或失败: {}", e);
-                break;
-            }
-        }
-    });
-
-    // 等待任意一个任务结束
-    tokio::select! {
-        _ = read_task => (),
-        _ = write_task => (),
-    }
+ 
 
     println!("连接已关闭");
 }
