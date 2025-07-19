@@ -1,3 +1,3 @@
 [workspace]
-members = ["panorama_s"]
+members = ["panorama_s","panorama_c"]
 resolver = "2" #启用了更智能的依赖解析，有助于避免多包环境下的依赖冲突

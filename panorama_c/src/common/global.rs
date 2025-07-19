@@ -1,0 +1,1 @@
+pub const LOG4RS_YAML_PATH: &str = "/Users/zongge/rust/panorama/panorama_s/log4rs.yaml";
