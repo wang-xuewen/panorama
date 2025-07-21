@@ -1,10 +1,11 @@
+use anyhow::Result;
 use core::option::Option::None;
-
-use futures_util::{SinkExt, StreamExt, stream::SplitSink};
+use futures_util::{stream::SplitSink, SinkExt, StreamExt};
+use std::error::Error;
 use tokio::net::TcpStream;
-use tokio_tungstenite::{accept_async, WebSocketStream, tungstenite::Message};
-use tokio::time::{timeout, Duration};
 use tokio::sync::mpsc;
+use tokio::time::{timeout, Duration};
+use tokio_tungstenite::{accept_async, tungstenite::Message, WebSocketStream};
 
 // 设置读写超时（毫秒）
 const READ_TIMEOUT_MS: u64 = 5000;
@@ -31,7 +32,7 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
 
                             match msg {
                                 Message::Text(text) => {
-                                     // 回显消息
+                                    // 回显消息
                                     // let ret_msg = Message::Text(format!("{}_ret", text));
                                     let ret_msg = Message::Text(text + "_ret");
                                     if let Err(e) = ws_sender.send(ret_msg.clone()).await {
@@ -39,11 +40,11 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
                                         break;
                                     }
                                     println!("已发送消息: {:?}", ret_msg);
-                                },
+                                }
                                 _ => {
                                     println!("收到消息不是Text类型，不做处理: {:?}", msg);
-                                }, 
-                            }         
+                                }
+                            }
                         }
                     }
                 }
@@ -60,16 +61,14 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
         }
     });
 
- 
-
     println!("连接已关闭");
 }
 
-#[tokio::main]
-async fn run_server() {
-    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await.unwrap();
+pub async fn run_server() -> Result<(), Box<dyn Error>> {
+    let listener = tokio::net::TcpListener::bind("127.0.0.1:8080").await?;
     while let Ok((stream, _)) = listener.accept().await {
-        let ws_stream = accept_async(stream).await.unwrap();
+        let ws_stream = accept_async(stream).await?;
         tokio::spawn(handle_connection(ws_stream));
     }
+    Ok(())
 }

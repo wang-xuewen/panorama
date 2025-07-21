@@ -8,6 +8,7 @@ mod web_socket;
 use crate::common::global;
 use crate::use_sqlite::use_sqlite;
 use crate::web_server::web_server_main;
+use crate::web_socket::ws_server;
 use anyhow::Result;
 use log::{error, info};
 use log4rs;
@@ -33,9 +34,15 @@ async fn main() {
     }
 
     // 启动 Web 服务器（后台运行）
-    let server_handle = tokio::spawn(async {
+    let _ = tokio::spawn(async {
         if let Err(e) = web_server_main::run_server().await {
-            eprintln!("Server error: {}", e);
+            error!("web_server_main error: {}", e);
+        }
+    });
+
+    let _ = tokio::spawn(async {
+        if let Err(e) = ws_server::run_server().await {
+            error!("web_server error: {}", e);
         }
     });
 

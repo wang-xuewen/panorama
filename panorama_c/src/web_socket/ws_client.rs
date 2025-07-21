@@ -1,12 +1,14 @@
 // 客户端
+use anyhow::Result;
 use futures_util::{SinkExt, StreamExt};
+use std::error::Error;
 use tokio_tungstenite::connect_async;
-use tungstenite::protocol::Message;
+use tokio_tungstenite::tungstenite::Message;
+// use tungstenite::protocol::Message;
 use url::Url;
 
-#[tokio::main]
-async fn ws_client_sample() {
-    let url = Url::parse("ws://127.0.0.1:8080").unwrap();
+pub async fn ws_client_sample() -> Result<(), Box<dyn Error>> {
+    let url = Url::parse("ws://127.0.0.1:8080")?;
 
     println!("Connecting to {}", url);
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
@@ -35,4 +37,6 @@ async fn ws_client_sample() {
             }
         }
     }
+
+    Ok(())
 }

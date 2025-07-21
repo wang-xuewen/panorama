@@ -4,7 +4,8 @@ use once_cell::sync::OnceCell;
 use std::sync::{Arc, Mutex};
 
 pub static GLOBAL_DB: OnceCell<Arc<Mutex<SqliteCrud>>> = OnceCell::new();
-pub const SQLITE_DB_PATH: &str = "/Users/zongge/rust/panorama/panorama_s/src/sqlite_sample/sqllite_sample.db";
+pub const SQLITE_DB_PATH: &str =
+    "/Users/zongge/rust/panorama/panorama_s/src/sqlite_sample/sqlite_sample.db";
 pub const LOG4RS_YAML_PATH: &str = "/Users/zongge/rust/panorama/panorama_s/log4rs.yaml";
 
 pub fn init_global_db(db_path: &str) -> Result<()> {

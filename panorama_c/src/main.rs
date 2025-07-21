@@ -1,9 +1,13 @@
-mod common;
+#![allow(unused)] // 全局屏蔽 unused 警告
 
+mod common;
+mod web_socket;
+
+use crate::common::global;
+use crate::web_socket::ws_client;
 use anyhow::Result;
 use log::{error, info};
 use log4rs;
-use crate::common::global;
 use rust_utils::graceful_shutdown;
 
 #[tokio::main]
@@ -21,11 +25,16 @@ async fn main() {
         Err(e) => error!("[init] failed: {}", e),
     }
 
+    let _ = tokio::spawn(async {
+        if let Err(e) = ws_client::ws_client_sample().await {
+            eprintln!("ws_client_sample error: {}", e);
+        }
+    });
+
     match graceful_shutdown().await {
         Ok(()) => println!("Shutdown successful"),
         Err(e) => eprintln!("Shutdown failed: {}", e),
     }
-   
 }
 
 fn init() -> Result<()> {

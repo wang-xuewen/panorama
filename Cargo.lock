@@ -965,11 +965,16 @@ name = "panorama_c"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "futures",
+ "futures-util",
  "log",
  "log4rs",
  "once_cell",
  "rust_utils",
  "tokio",
+ "tokio-tungstenite",
+ "tungstenite 0.20.1",
+ "url",
 ]
 
 [[package]]
