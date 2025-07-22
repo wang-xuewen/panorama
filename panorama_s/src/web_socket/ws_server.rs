@@ -39,8 +39,11 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
             _ => {}
         }
     }
-    let _ = ws_sender.close().await; // 确保连接关闭
-    info!("连接已关闭");
+    // let _ = ws_sender.close().await; // 确保连接关闭
+    match ws_sender.close().await {
+        Ok(_) => println!("ws sender成功关闭"),
+        Err(e) => error!("ws sender关闭失败：{}", e),
+    }
 }
 
 pub async fn run_server() -> Result<(), Box<dyn Error>> {
