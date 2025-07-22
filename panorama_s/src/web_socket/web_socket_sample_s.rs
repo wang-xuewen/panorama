@@ -53,3 +53,74 @@ async fn main() {
         tokio::spawn(handle_connection(stream));
     }
 }
+
+// WebSocket 背压处理及Rust示例
+use futures::{SinkExt, StreamExt};
+use tokio::sync::mpsc;
+use tokio_tungstenite::connect_async;
+use tungstenite::protocol::Message;
+
+#[tokio::main]
+async fn main() {
+    // 连接到WebSocket服务器
+    let url = "wss://echo.websocket.org";
+    let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
+    println!("Connected to {}", url);
+
+    // 分离读写部分
+    let (mut write_half, mut read_half) = ws_stream.split();
+
+    // 创建一个有界通道用于背压控制（缓冲区大小为10）
+    let (sender, mut receiver) = mpsc::channel::<Message>(10);
+
+    // 启动发送任务
+    let send_task = tokio::spawn(async move {
+        while let Some(message) = receiver.recv().await {
+            // 尝试发送消息，如果遇到背压会在这里等待
+            if let Err(e) = write_half.send(message).await {
+                eprintln!("Send error: {}", e);
+                break;
+            }
+        }
+    });
+
+    // 启动接收任务
+    let recv_task = tokio::spawn(async move {
+        while let Some(msg) = read_half.next().await {
+            match msg {
+                Ok(msg) => {
+                    println!("Received: {}", msg);
+                    // 模拟处理延迟
+                    tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
+                }
+                Err(e) => {
+                    eprintln!("Receive error: {}", e);
+                    break;
+                }
+            }
+        }
+    });
+
+    // 主线程模拟消息生产
+    for i in 1..=20 {
+        let message = Message::Text(format!("Message {}", i));
+        println!("Trying to send: {}", message);
+
+        // 使用try_send来检测背压，如果缓冲区满了就等待
+        if let Err(e) = sender.try_send(message) {
+            println!("Backpressure detected! Waiting... (attempt {})", i);
+            // 等待一段时间再重试
+            tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
+            // 这里可以加入更复杂的背压处理逻辑
+            continue;
+        }
+
+        tokio::time::sleep(tokio::time::Duration::from_millis(50)).await;
+    }
+
+    // 关闭发送通道
+    drop(sender);
+
+    // 等待任务完成
+    let _ = tokio::join!(send_task, recv_task);
+}

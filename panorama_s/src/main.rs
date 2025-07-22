@@ -47,8 +47,8 @@ async fn main() {
     });
 
     match graceful_shutdown().await {
-        Ok(()) => println!("Shutdown successful"),
-        Err(e) => eprintln!("Shutdown failed: {}", e),
+        Ok(()) => info!("Shutdown successful"),
+        Err(e) => error!("Shutdown failed: {}", e),
     }
 }
 

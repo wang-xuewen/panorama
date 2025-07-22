@@ -1,18 +1,18 @@
 // 客户端
 use anyhow::Result;
 use futures_util::{SinkExt, StreamExt};
+use log::{error, info};
 use std::error::Error;
 use tokio_tungstenite::connect_async;
 use tokio_tungstenite::tungstenite::Message;
-// use tungstenite::protocol::Message;
 use url::Url;
 
 pub async fn ws_client_sample() -> Result<(), Box<dyn Error>> {
     let url = Url::parse("ws://127.0.0.1:8080")?;
 
-    println!("Connecting to {}", url);
+    info!("Connecting to {}", url);
     let (ws_stream, _) = connect_async(url).await.expect("Failed to connect");
-    println!("WebSocket handshake has been successfully completed");
+    info!("WebSocket handshake has been successfully completed");
 
     let (mut write, mut read) = ws_stream.split();
 
@@ -25,14 +25,14 @@ pub async fn ws_client_sample() -> Result<(), Box<dyn Error>> {
         match msg {
             Ok(msg) => {
                 if msg.is_text() {
-                    println!("Received message: {}", msg);
+                    info!("Received message: {}", msg);
                 } else if msg.is_close() {
-                    println!("Server closed connection");
+                    info!("Server closed connection");
                     break;
                 }
             }
             Err(e) => {
-                println!("Error reading message: {}", e);
+                error!("Error reading message: {}", e);
                 break;
             }
         }

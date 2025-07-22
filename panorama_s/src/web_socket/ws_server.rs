@@ -1,6 +1,7 @@
 use anyhow::Result;
 use core::option::Option::None;
 use futures_util::{stream::SplitSink, SinkExt, StreamExt};
+use log::{error, info};
 use std::error::Error;
 use tokio::net::TcpStream;
 use tokio::sync::mpsc;
@@ -15,53 +16,31 @@ async fn handle_connection(ws_stream: WebSocketStream<TcpStream>) {
     // 拆分成读/写两端
     let (mut ws_sender, mut ws_receiver) = ws_stream.split();
 
-    // 任务1：读取 WebSocket 消息（含超时）
-    let read_task = tokio::spawn(async move {
-        loop {
-            match timeout(Duration::from_millis(READ_TIMEOUT_MS), ws_receiver.next()).await {
-                Ok(Some(Ok(msg))) => {
-                    match msg {
-                        Message::Close(close_frame) => {
-                            println!("收到关闭帧，准备关闭连接");
-                            // 显式响应关闭帧
-                            let _ = ws_sender.close().await;
-                            break; // 退出循环以释放资源
-                        }
-                        _ => {
-                            println!("收到消息: {:?}", msg);
-
-                            match msg {
-                                Message::Text(text) => {
-                                    // 回显消息
-                                    // let ret_msg = Message::Text(format!("{}_ret", text));
-                                    let ret_msg = Message::Text(text + "_ret");
-                                    if let Err(e) = ws_sender.send(ret_msg.clone()).await {
-                                        println!("Error sending message: {}", e);
-                                        break;
-                                    }
-                                    println!("已发送消息: {:?}", ret_msg);
-                                }
-                                _ => {
-                                    println!("收到消息不是Text类型，不做处理: {:?}", msg);
-                                }
-                            }
-                        }
-                    }
-                }
-                Ok(Some(Err(e))) => {
-                    eprintln!("WebSocket 读错误: {}", e);
-                    break;
-                }
-                Ok(None) => break, // 连接关闭
-                Err(_) => {
-                    eprintln!("读取超时，强制关闭连接");
+    // 持续监听接收消息
+    while let Some(result) = ws_receiver.next().await {
+        match result {
+            Ok(Message::Text(text)) => {
+                let ret_msg = Message::Text(format!("{}_ret", text));
+                if ws_sender.send(ret_msg).await.is_err() {
                     break;
                 }
             }
+            Ok(Message::Binary(bin)) => {
+                info!("Received binary (len={})", bin.len())
+            }
+            Ok(Message::Ping(ping)) => {
+                let _ = ws_sender.send(Message::Pong(ping)).await;
+            }
+            Ok(Message::Close(_)) => break,
+            Err(e) => {
+                error!("接收错误: {}", e);
+                break;
+            }
+            _ => {}
         }
-    });
-
-    println!("连接已关闭");
+    }
+    let _ = ws_sender.close().await; // 确保连接关闭
+    info!("连接已关闭");
 }
 
 pub async fn run_server() -> Result<(), Box<dyn Error>> {
