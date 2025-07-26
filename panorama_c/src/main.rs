@@ -4,7 +4,8 @@ mod common;
 mod web_socket;
 
 use crate::common::global;
-use crate::web_socket::use_ws_client;
+// use crate::web_socket::use_ws_client;
+use crate::web_socket::ws_client_1;
 use anyhow::Result;
 use log::{error, info};
 use log4rs;
@@ -25,18 +26,19 @@ async fn main() {
         Err(e) => error!("[init] failed: {}", e),
     }
 
-    // let _ = tokio::spawn(async {
-    //     if let Err(e) = ws_client_1::ws_client_sample().await {
-    //         eprintln!("ws_client_sample error: {}", e);
-    //     }
-    // });
-
     let _ = tokio::spawn(async {
-        if let Err(e) = use_ws_client::use_ws().await {
-            error!("ws_client_sample error: {}", e);
+        if let Err(e) = ws_client_1::ws_client_sample().await {
+            eprintln!("ws_client_sample error: {}", e);
         }
     });
+
+    // let _ = tokio::spawn(async {
+    //     if let Err(e) = use_ws_client::use_ws().await {
+    //         error!("ws_client_sample error: {}", e);
+    //     }
+    // });
    
+   info!("wait to close.");
 
     match graceful_shutdown().await {
         Ok(()) => info!("Shutdown successful"),

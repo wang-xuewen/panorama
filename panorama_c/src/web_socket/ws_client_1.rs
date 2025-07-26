@@ -79,7 +79,6 @@ pub async fn ws_client_sample() -> Result<(), Box<dyn Error>> {
         res = recv_task => res?,
     }
 
-    
 
     Ok(())
 }
