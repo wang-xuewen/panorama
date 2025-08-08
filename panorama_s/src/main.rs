@@ -1,11 +1,13 @@
 #![allow(unused)] // 全局屏蔽 unused 警告
 mod common;
+mod rust_lang;
 mod sqlite_sample;
 mod use_sqlite;
 mod web_server;
 mod web_socket;
 
 use crate::common::global;
+use crate::rust_lang::trait_sample;
 use crate::use_sqlite::use_sqlite;
 use crate::web_server::web_server_main;
 use crate::web_socket::ws_server;
@@ -45,6 +47,8 @@ async fn main() {
             error!("web_server error: {}", e);
         }
     });
+
+    trait_sample::use_trait();
 
     match graceful_shutdown().await {
         Ok(()) => info!("Shutdown successful"),
