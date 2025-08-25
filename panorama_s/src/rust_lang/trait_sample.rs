@@ -28,6 +28,30 @@ fn greet_someone(g: &dyn Greet) {
     g.say_goodbye();
 }
 
+trait Container {
+    type Item;
+    
+    fn get(&self,index:usize) -> Option<&Self::Item>;
+    fn add(&mut self,item: Self::Item);
+}
+
+// 关联类型
+struct MyVec<T> {
+    items:Vec<T>,
+}
+
+impl <T> Container for MyVec<T> {
+    type Item = T;
+    fn get(&self,index:usize) -> Option<&T> {
+        self.items.get(index)
+    }
+    fn add(&mut self,item:T) {
+        self.items.push(item);
+    }
+}
+
+
+
 pub fn use_trait() {
     // 基本trait
     info!("基本 trait");
@@ -40,4 +64,11 @@ pub fn use_trait() {
     // trait 对象
     info!("trait 对象");
     greet_someone(&person);
+
+    // 关联类型
+    let mut container = MyVec{
+        items:vec![1,2,3]
+    };
+    container.add(4);
+    info!("Item at index 2: {:?}",container.get(2));
 }
