@@ -18,7 +18,7 @@ struct Person {
 }
 impl Greet for Person {
     fn say_hello(&self) {
-        println!("Hello, my name is {}!", self.name);
+        info!("Hello, my name is {}!", self.name);
     }
 }
 
@@ -30,27 +30,47 @@ fn greet_someone(g: &dyn Greet) {
 
 trait Container {
     type Item;
-    
-    fn get(&self,index:usize) -> Option<&Self::Item>;
-    fn add(&mut self,item: Self::Item);
+
+    fn get(&self, index: usize) -> Option<&Self::Item>;
+    fn add(&mut self, item: Self::Item);
 }
 
 // 关联类型
 struct MyVec<T> {
-    items:Vec<T>,
+    items: Vec<T>,
 }
 
-impl <T> Container for MyVec<T> {
+impl<T> Container for MyVec<T> {
     type Item = T;
-    fn get(&self,index:usize) -> Option<&T> {
+    fn get(&self, index: usize) -> Option<&T> {
         self.items.get(index)
     }
-    fn add(&mut self,item:T) {
+    fn add(&mut self, item: T) {
         self.items.push(item);
     }
 }
 
+// 泛型trait
+trait Converter<T> {
+    fn convert(&self) -> T;
+}
 
+impl Converter<String> for Person {
+    fn convert(&self) -> String {
+        format!("Person[name={}]", self.name)
+    }
+}
+
+impl Converter<u32> for Person {
+    fn convert(&self) -> u32 {
+        self.name.len() as u32
+    }
+}
+
+// trait 约束（使用泛型作为trait约束）
+fn print_greeting<T: Greet>(item: T) {
+    item.say_hello();
+}
 
 pub fn use_trait() {
     // 基本trait
@@ -66,9 +86,18 @@ pub fn use_trait() {
     greet_someone(&person);
 
     // 关联类型
-    let mut container = MyVec{
-        items:vec![1,2,3]
+    let mut container = MyVec {
+        items: vec![1, 2, 3],
     };
     container.add(4);
-    info!("Item at index 2: {:?}",container.get(2));
+    info!("Item at index 2: {:?}", container.get(2));
+
+    // 泛型trait
+    let result1: String = person.convert(); // 推断为 String
+    let result2: u32 = person.convert(); // 推断为 u32
+    info!("String: {}", result1); // Person[name=Charlie]
+    info!("U32: {}", result2); // 7
+
+    // trait 约束（使用泛型作为trait约束）
+    print_greeting(person);
 }
