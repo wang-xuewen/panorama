@@ -7,7 +7,7 @@ mod web_server;
 mod web_socket;
 
 use crate::common::global;
-use crate::rust_lang::trait_sample;
+use crate::rust_lang::trait_s;
 use crate::use_sqlite::use_sqlite;
 use crate::web_server::web_server_main;
 use crate::web_socket::ws_server;
@@ -48,7 +48,7 @@ async fn main() {
         }
     });
 
-    trait_sample::use_trait();
+    trait_s::use_trait();
 
     match graceful_shutdown().await {
         Ok(()) => info!("Shutdown successful"),
