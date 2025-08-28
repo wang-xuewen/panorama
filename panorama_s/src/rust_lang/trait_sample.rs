@@ -72,6 +72,27 @@ fn print_greeting<T: Greet>(item: T) {
     item.say_hello();
 }
 
+// 自动trait
+struct MyData(u32); // 自动实现 Send（因为 u32 是 Send）
+fn spawn_thread() {
+    let data = MyData(42);
+    std::thread::spawn(move || info!("Data :{}", data.0)); // 合法，因为 MyData 是 Send
+}
+fn is_sync<T: Sync>(t: T) {}
+
+// super trait (一个 trait 依赖于另一个 trait)
+trait Loggable: Display {
+    fn log(&self) {
+        info!("Log: {}", self)
+    }
+}
+impl Loggable for Person {}
+impl Display for Person {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(f, "Person({})", self.name)
+    }
+}
+
 pub fn use_trait() {
     // 基本trait
     info!("基本 trait");
@@ -100,4 +121,13 @@ pub fn use_trait() {
 
     // trait 约束（使用泛型作为trait约束）
     print_greeting(person);
+
+    // supertrait
+    let person2 = Person {
+        name: "Bob".to_string(),
+    };
+    person2.log();
+
+    // 自动 trait
+    is_sync(person2);
 }
