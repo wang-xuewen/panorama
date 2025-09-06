@@ -9,7 +9,7 @@ trait Greet {
 
     // 带有默认实现的方法
     fn say_goodbye(&self) {
-        println!("Goodbye!");
+        info!("Goodbye!");
     }
 }
 

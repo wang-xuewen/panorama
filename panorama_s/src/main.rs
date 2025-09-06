@@ -7,7 +7,7 @@ mod web_server;
 mod web_socket;
 
 use crate::common::global;
-use crate::rust_lang::trait_s;
+// use crate::rust_lang;
 use crate::use_sqlite::use_sqlite;
 use crate::web_server::web_server_main;
 use crate::web_socket::ws_server;
@@ -26,15 +26,25 @@ async fn main() {
     }
     info!("init log4rs ok.");
 
+     info!("");
+   info!("");
+    info!(">>> init");
     match init() {
         Ok(_) => info!("[init] ok."),
         Err(e) => error!("[init] failed: {}", e),
     }
+
+     info!("");
+   info!("");
+    info!(">>> use sqlite");
     match use_sqlite() {
         Ok(_) => info!("[sqlite] use_sqlite ok."),
         Err(e) => error!("[sqlite] use_sqlite failed: {}", e),
     }
 
+     info!("");
+   info!("");
+    info!(">>> start web server");
     // 启动 Web 服务器（后台运行）
     let _ = tokio::spawn(async {
         if let Err(e) = web_server_main::run_server().await {
@@ -42,14 +52,29 @@ async fn main() {
         }
     });
 
+   info!("");
+   info!("");
+    info!(">>> websocket listen");
     let _ = tokio::spawn(async {
         if let Err(e) = ws_server::run_server().await {
             error!("web_server error: {}", e);
         }
     });
 
-    trait_s::use_trait();
+    info!("");
+   info!("");
+    info!(">>> use trait");
+    rust_lang::trait_s::use_trait();
 
+    info!("");
+   info!("");
+     info!(">>> use life_time");
+    rust_lang::life_time::use_life_time();
+
+
+     info!("");
+   info!("");
+    info!(">>> wait for exist");
     match graceful_shutdown().await {
         Ok(()) => info!("Shutdown successful"),
         Err(e) => error!("Shutdown failed: {}", e),
